@@ -12,7 +12,7 @@ isi = input('Masukkan Isi Berita : ')
 berita = judul + isi
 
 # load from file and predict using the best configs found in the CV step
-model_FilteringHoax = joblib.load("model_FilteringHoax.pkl" )
+model_FilteringHoax = joblib.load("model_NB.pkl" )
 # run predictions on twitter data
 beritap_preds = model_FilteringHoax.predict([berita])
 

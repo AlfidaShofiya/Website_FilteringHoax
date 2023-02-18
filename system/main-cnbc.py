@@ -1,3 +1,5 @@
+#! C:/Users/user/AppData/Local/Programs/Python/Python39/python.exe
+import cgi
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -5,16 +7,17 @@ import datetime
 from datetime import datetime
 import MySQLdb
 from dateutil import parser
-import numpy as np  
-import random  
-import string
+import joblib
 
+# print('Content-Type: text/html')
+# print()
+# print("<META HTTP-EQUIY=refresh CONETNT=\"0;URL=http://localhost/filteringhoax/systemfiltering\">\n");
+print('<span class="class"><a href="http://localhost/filteringhoax/systemfiltering/index"> Back </a></span>');
 
 HOST = "localhost"
 USERNAME = "root"
 PASSWORD = ""
 DATABASE = "db_filteringhoax"
-
 
 class Scraper:
     def __init__(self, keywords, pages):
@@ -75,99 +78,25 @@ class Scraper:
                     "image": image,
                     "href": href})
                 db = MySQLdb.connect(HOST, USERNAME, PASSWORD, DATABASE)
-                # tb_berita = []
                 # prepare a cursor object using cursor() method
                 cursor = db.cursor()
                 # tb_berita = []
                 
-                x = content
+                # Filtering Hoax
+                berita = title + content
                 
-                from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
-                from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-
-                stopwords = StopWordRemoverFactory().get_stop_words() 
-                stemmer = StemmerFactory().create_stemmer()
-
-                import re 
-
-                def text_preprocess(text, stemmer, stopwords):
-                    x = text.str.replace(r'\W',' ')
-                    x = x.str.replace(r'\s+',' ')
-                    x = x.str.lower()
-                    x = x.apply(lambda x: ' '.join([stemmer.stem(item) for item in x.split() if item not in stopwords]))
-                    return x
-
-                processed_text = text_preprocess(x, stemmer, stopwords)
+                # load from file and predict using the best configs found in the CV step
+                model_FilteringHoax = joblib.load("model_NB.pkl" )
+                # run predictions on twitter data
+                beritap_preds = model_FilteringHoax.predict([berita])
                 
-                import nltk
-                nltk.download()
-
-                wordfreq = {}
-                for sentence in processed_text:
-                    tokens = nltk.word_tokenize(sentence)
-                    for token in tokens:
-                        if token not in wordfreq.keys():
-                            wordfreq[token] = 1
-                        else:
-                            wordfreq[token] += 1
-
-                import heapq
-                most_freq = heapq.nlargest(300, wordfreq, key=wordfreq.get)
-                
-                sentence_vectors = []
-                for sentence in processed_text:
-                    sentence_tokens = nltk.word_tokenize(sentence)
-                    sent_vec = []
-                    for token in most_freq:
-                        if token in sentence_tokens:
-                            sent_vec.append(1)
-                        else:
-                            sent_vec.append(0)
-                    sentence_vectors.append(sent_vec)
-
-                sentence_vectors = np.asarray(sentence_vectors)
-                
-                word_idf_values = {}
-                for token in most_freq:
-                    doc_containing_word = 0
-                    for document in processed_text:
-                        if token in nltk.word_tokenize(document):
-                            doc_containing_word += 1
-                    word_idf_values[token] = np.log(len(x)/(1 + doc_containing_word))
-
-
-                word_tf_values = {}
-                for token in most_freq:
-                    sent_tf_vector = []
-                    for document in processed_text:
-                        doc_freq = 0
-                        for word in nltk.word_tokenize(document):
-                            if token == word:
-                                doc_freq += 1
-                        word_tf = doc_freq/len(nltk.word_tokenize(document))
-                        sent_tf_vector.append(word_tf)
-                    word_tf_values[token] = sent_tf_vector
-                    
-                tfidf_values = []
-                for token in word_tf_values.keys():
-                    tfidf_sentences = []
-                    for tf_sentence in word_tf_values[token]:
-                        tf_idf_score = tf_sentence * word_idf_values[token]
-                        tfidf_sentences.append(tf_idf_score)
-                    tfidf_values.append(tfidf_sentences)
-
-                tf_idf_model = np.asarray(tfidf_values)
-                tf_idf_model = np.transpose(tf_idf_model)
-                
-                from sklearn.preprocessing import LabelEncoder
-                le_label = LabelEncoder()
-
-                # data['label'] = le_label.fit_transform(data['label'])
-                # y = data['label']
+                if beritap_preds == 0:
+                    kategori = 2
+                else :
+                    kategori = 1
 
                 # Prepare SQL query to INSERT a record into the database.
                 id_admin = 1
-                id_kategori = 1
                 id_status = 1
                 for published_time_indo in published_time:
                         published_time_indo = published_time.replace("Januari", "Jan").replace("January", "Jan").replace("Februari", "Feb").replace("February", "Feb").replace("Maret", "Mar").replace("March", "Mar").replace("April", "Apr").replace("Mei", "Mei").replace("May", "Mei").replace("Juni", "Jun").replace("June", "Jun").replace("Juli", "Jul").replace("July", "Jul").replace("Agustus", "Agu").replace("August", "Agu").replace("September", "Sep").replace("Oktober", "Okt").replace("October", "Okt").replace("November", "Nov").replace("Desember", "Des").replace("December", "Des")
@@ -175,8 +104,7 @@ class Scraper:
                         published_time_WIB = published_time_indo[0:12]
                 sql = "insert into tb_berita (id_admin, id_kategori, id_status,judul, tgl_berita, isi, gambar, sumber) values (%s,%s,%s,%s,%s,%s,%s,%s)"
                 cursor.execute(
-                    sql, (id_admin, id_kategori, id_status, title, published_time_WIB, le_label, image, href))
-                # inptdata = cursor.executemany(sql, tb_berita)
+                    sql, (id_admin, kategori, id_status, title, published_time_WIB, content, image, href))
                 print("BERHASIL")
 
                 db.commit()
@@ -190,8 +118,6 @@ class Scraper:
         finally:
             print()
             print("[~] Scraping finished!")
-            # print(published_time)
-            # print(published_time_indo)
             print(f"[~] Total Articles: {len(self.articles)}")
 
         return self.articles
@@ -204,23 +130,17 @@ class Scraper:
         else:
             print(df)
 
-    # def convert(date_time):
-    #     format = '%b %d %Y %I:%M%p' # The format
-    #     datetime_str = datetime.datetime.strptime(date_time, format)
-   
-    #     return datetime_str
-   
-    # # Driver code
-    # date_time = published_time
-    # print(convert(date_time))
-
+form = cgi.FieldStorage()
 if __name__ == '__main__':
-    keywords = input("[~] Keywords     : ")
-    pages = input("[~] Total Pages  : ")
+    keywords = form.getvalue('kata_kunci_cnbc')
+    pages = form.getvalue('nomor_hal_cnbc')
     base_url = f"https://www.cnbcindonesia.com/search/"
 
     scrape = Scraper(keywords, pages)
     response = scrape.fetch(base_url)
     articles = scrape.get_articles(response)
+    
+    print (keywords)
 
     print("[~] Program Finished")
+   

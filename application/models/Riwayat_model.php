@@ -2,8 +2,10 @@
 
 class Riwayat_model extends CI_Model
 {
+	// Mendeklarasikan tabel dalam database yang digunakan
 	private $_table = "tb_berita";
 
+	// Fungsi yang digunakan untuk mengambil Data Riwayat
 	public function getRiwayat()
 	{
 		$this->db->select('*');

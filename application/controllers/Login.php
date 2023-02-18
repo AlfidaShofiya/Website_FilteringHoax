@@ -2,6 +2,7 @@
 
 class Login extends CI_Controller
 {
+	// Fungsi yang digunakan untuk memanggil atau mengimport berbagai library dan model yang digunakan
 	public function __construct()
 	{
 		parent::__construct();
@@ -9,6 +10,7 @@ class Login extends CI_Controller
 		$this->load->library('form_validation');
 	}
 
+	// Fungsi untuk mengarahkan halaman login
 	public function index()
 	{
 		check_already_login();
@@ -19,7 +21,8 @@ class Login extends CI_Controller
 		}
 		$this->load->view("admin/login_page.php");
 	}
-
+	
+	// Fungsi untuk logout dan mengarahkan kembali pada halaman login
 	public function logout()
 	{
 		$this->session->sess_destroy();

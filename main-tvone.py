@@ -4,11 +4,11 @@ import codecs
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
-import datetime
 from datetime import datetime
+from datetime import datetime
+import joblib
 import MySQLdb
 from dateutil import parser
-import joblib
 
 print('Content-Type: text/html')
 print()
@@ -102,17 +102,14 @@ PASSWORD = ""
 DATABASE = "db_filteringhoax"
 
 class Scraper:
-    def __init__(self, keywords, pages):
+    def __init__(self, keywords):
         self.keywords = keywords
-        self.pages = pages
 
     def fetch(self, base_url):
         self.base_url = base_url
 
         self.params = {
-            'query': self.keywords,
-            'sortby': 'time',
-            'page': 2
+            'q': self.keywords,
         }
 
         self.headers = {
@@ -126,75 +123,80 @@ class Scraper:
             self.base_url, params=self.params, headers=self.headers)
 
         return self.response
-    
 
     def get_articles(self, response):
         article_lists = []
+        content_lists = []
+        url = f"{self.base_url}?q={self.keywords}"
+        page = requests.get(url)
+        soup = BeautifulSoup(page.text, "html.parser")
+        container = soup.find('div', {"class": "article-list-container"})
+        articles = container.find_all(
+            'div', {"class": "article-list-row"})
+        for article in articles:
+            list_info = article.find(
+                'div', class_="article-list-info content_center")
+            title = list_info.find('h2').get_text()
+            href = list_info.find('a')["href"]
+            published_time = list_info.find('li', class_="ali-date").get_text()
+            url1 = href
+            page1 = requests.get(url1)
+            soup2 = BeautifulSoup(page1.text, "html.parser")
+            page2 = requests.get(url1 + "?page=2")
+            soup3 = BeautifulSoup(page2.text, "html.parser")
+            wrappImage = soup2.find(
+                'div', {"class": "site-container site-container-2column"})
+            image = wrappImage.find('img')["src"]
+            content = soup2.find_all('p')
+            content = ''.join(map(str, content))
+            content2 = soup3.find_all('p')
+            content2 = ''.join(map(str, content2))
 
-        for page in range(1, int(self.pages)+1):
-            url = f"{self.base_url}?query={self.keywords}&p={page}"
+            article_lists.append({
+                "title": title,
+                "href": href,
+                "published_item": published_time,
+                "image": image,
+                "contenta": content + content2
+            })
+            db = MySQLdb.connect(HOST, USERNAME, PASSWORD, DATABASE)
+            
+            # prepare a cursor object using cursor() method
+            cursor = db.cursor()
+            
+            # Model Filtering Hoax
+            berita = title + content + content2
+            # load from file and predict using the best configs found in the CV step
+            model_FilteringHoax = joblib.load("model_NB.pkl")
+            beritap_preds = model_FilteringHoax.predict([berita])
 
-            page = requests.get(url)
-            soup = BeautifulSoup(page.text, "html.parser")
+            if beritap_preds == 0:
+                kategori = 2
+            else:
+                kategori = 1
 
-            articles = soup.find_all("article")
+            # Prepare SQL query to INSERT a record into the database.
+            id_admin = 1
+            id_status = 1
+            
+            for published_time_indo in published_time:
+                    published_time_indo = published_time.replace("/01/", " Jan ").replace("/02/", " Feb ").replace("/03/", " Mar ").replace("/04/", " Apr ").replace("/05/", " Mei ").replace("/06/", " Jun ").replace("/07/", " Jul ").replace("/08/", " Agu ").replace("/09/", " Sep ").replace("/10/", " Okt ").replace("/11/", " Nov ").replace("/12/", " Des ")
+            for published_time_WIB in published_time_indo:
+                    published_time_WIB = published_time_indo[0:12]
+            sql = "insert into tb_berita (id_admin, id_kategori, id_status,judul, tgl_berita, isi, gambar, sumber) values (%s,%s,%s,%s,%s,%s,%s,%s)"
+            cursor.execute(
+                sql, (id_admin, kategori, id_status, title, published_time_WIB, content + content2 , image, href))
 
-            for article in articles:
-                title = article.find("h2").get_text()
-                image = article.find("img")["src"]
-                href = article.find("a")["href"]
-                url2 = href
-                page2 = requests.get(url2)
-                soup2 = BeautifulSoup(page2.text, "html.parser")
-                content = soup2.find_all('p')
-                content = ' '.join(map(str, content))
-                published_time = soup2.find("div", {"class": "date"}).get_text()
-                
-                article_lists.append({
-                    "title": title,
-                    "published_time": published_time,
-                    "content": content,
-                    "image": image,
-                    "href": href})
-                db = MySQLdb.connect(HOST, USERNAME, PASSWORD, DATABASE)
-                
-                # prepare a cursor object using cursor() method
-                cursor = db.cursor()
-                
-                # Model Filtering Hoax
-                berita = title + content
-                
-                # load from file and predict using the best configs found in the CV step
-                model_FilteringHoax = joblib.load("model_NB.pkl" )
-                beritap_preds = model_FilteringHoax.predict([berita])
-                
-                if beritap_preds == 0:
-                    kategori = 2
-                else :
-                    kategori = 1
-
-                # Prepare SQL query to INSERT a record into the database.
-                id_admin = 1
-                id_status = 1
-                for published_time_indo in published_time:
-                        published_time_indo = published_time.replace("Januari", "Jan").replace("January", "Jan").replace("Februari", "Feb").replace("February", "Feb").replace("Maret", "Mar").replace("March", "Mar").replace("April", "Apr").replace("Mei", "Mei").replace("May", "Mei").replace("Juni", "Jun").replace("June", "Jun").replace("Juli", "Jul").replace("July", "Jul").replace("Agustus", "Agu").replace("August", "Agu").replace("September", "Sep").replace("Oktober", "Okt").replace("October", "Okt").replace("November", "Nov").replace("Desember", "Des").replace("December", "Des")
-                for published_time_WIB in published_time_indo:
-                        published_time_WIB = published_time_indo[0:12]
-                sql = "insert into tb_berita (id_admin, id_kategori, id_status,judul, tgl_berita, isi, gambar, sumber) values (%s,%s,%s,%s,%s,%s,%s,%s)"
-                cursor.execute(
-                    sql, (id_admin, kategori, id_status, title, published_time_WIB, content, image, href))
-                
-                db.commit()
-                db.close()
+            db.commit()
+            db.close()
 
 form = cgi.FieldStorage()
 if __name__ == '__main__':
-    keywords = form.getvalue('kata_kunci_cnbc')
-    pages = form.getvalue('nomor_hal_cnbc')
-    base_url = f"https://www.cnbcindonesia.com/search/"
+    keywords = form.getvalue('kata_kunci_tvone')
+    base_url = f"https://www.tvonenews.com/cari"
 
-    scrape = Scraper(keywords, pages)
+    scrape =Scraper(keywords)
     response = scrape.fetch(base_url)
     articles = scrape.get_articles(response)
     
-    print (keywords)
+    print(keywords)

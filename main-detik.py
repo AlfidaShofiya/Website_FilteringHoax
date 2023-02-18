@@ -1,4 +1,4 @@
-#! C:/Users/user/AppData/Local/Programs/Python/Python39/python.exe
+#! C:\Users\User\AppData\Local\Programs\Python\Python39\python.exe
 import cgi
 import codecs
 import requests
@@ -132,7 +132,7 @@ class Scraper:
         article_lists = []
 
         for page in range(1, int(self.pages)+1):
-            url = f"{self.base_url}?query={self.keywords}&p={page}"
+            url = f"{self.base_url}?query={self.keywords}&sortby=time&page={page}"
 
             page = requests.get(url)
             soup = BeautifulSoup(page.text, "html.parser")
@@ -140,19 +140,22 @@ class Scraper:
             articles = soup.find_all("article")
 
             for article in articles:
-                title = article.find("h2").get_text()
+                title = article.find("h2", {"class": "title"}).get_text()
+                published_time = article.find(
+                    "span", {"class": "date"}).get_text().split(",")[1]
                 image = article.find("img")["src"]
                 href = article.find("a")["href"]
+                body = article.find("p").get_text()
                 url2 = href
                 page2 = requests.get(url2)
                 soup2 = BeautifulSoup(page2.text, "html.parser")
                 content = soup2.find_all('p')
                 content = ' '.join(map(str, content))
-                published_time = soup2.find("div", {"class": "date"}).get_text()
                 
                 article_lists.append({
                     "title": title,
                     "published_time": published_time,
+                    "body": body,
                     "content": content,
                     "image": image,
                     "href": href})
@@ -176,25 +179,29 @@ class Scraper:
                 # Prepare SQL query to INSERT a record into the database.
                 id_admin = 1
                 id_status = 1
-                for published_time_indo in published_time:
-                        published_time_indo = published_time.replace("Januari", "Jan").replace("January", "Jan").replace("Februari", "Feb").replace("February", "Feb").replace("Maret", "Mar").replace("March", "Mar").replace("April", "Apr").replace("Mei", "Mei").replace("May", "Mei").replace("Juni", "Jun").replace("June", "Jun").replace("Juli", "Jul").replace("July", "Jul").replace("Agustus", "Agu").replace("August", "Agu").replace("September", "Sep").replace("Oktober", "Okt").replace("October", "Okt").replace("November", "Nov").replace("Desember", "Des").replace("December", "Des")
-                for published_time_WIB in published_time_indo:
-                        published_time_WIB = published_time_indo[0:12]
+                
+                for published_time_WIB in published_time:
+                        published_time_WIB = published_time[0:12]
+                for published_time_indo in published_time_WIB:
+                        published_time_indo = published_time_WIB.replace("Januari", "Jan").replace("Februari", "Feb").replace("Maret", "Mar").replace("April", "Apr").replace("Mei", "Mei").replace("Juni", "Jun").replace("Juli", "Jul").replace("Agustus", "Agu").replace("September", "Sep").replace("Oktober", "Okt").replace("November", "Nov").replace("Desember", "Des")
+
                 sql = "insert into tb_berita (id_admin, id_kategori, id_status,judul, tgl_berita, isi, gambar, sumber) values (%s,%s,%s,%s,%s,%s,%s,%s)"
                 cursor.execute(
-                    sql, (id_admin, kategori, id_status, title, published_time_WIB, content, image, href))
-                
+                    sql, (id_admin, kategori, id_status, title, published_time_indo, content, image, href))
+
                 db.commit()
                 db.close()
 
 form = cgi.FieldStorage()
 if __name__ == '__main__':
-    keywords = form.getvalue('kata_kunci_cnbc')
-    pages = form.getvalue('nomor_hal_cnbc')
-    base_url = f"https://www.cnbcindonesia.com/search/"
+    keywords = form.getvalue('kata_kunci_detik')
+    pages = form.getvalue('nomor_hal_detik')
+    base_url = f"https://www.detik.com/search/searchall"
 
     scrape = Scraper(keywords, pages)
     response = scrape.fetch(base_url)
     articles = scrape.get_articles(response)
-    
     print (keywords)
+    print("[~] Selesai Difiltering!")
+
+

@@ -138,37 +138,37 @@ if __name__ == '__main__':
     articles = scrape.get_articles(response)
 
     print("[~] Program Finished")
-    conn = MySQLdb.connect(HOST, USERNAME, PASSWORD, DATABASE)
-    # conn = psycopg2.connect(conn_string)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tb_berita")
-    rows = cursor.fetchall()
-    rowarray_list = []
-    for row in rows:
-        t = (row[0], row[1], row[2], row[3], row[4], row[5], row[6],row[7],row[8],row[9],row[10] )
-        rowarray_list.append(t)
-    j = json.dumps(rowarray_list)
-    with open("student_rowarrays.js", "w") as f:
-        f.write(j)
-    # Convert query to objects of key-value pairs
-    objects_list = []
-    for row in rows:
-        d = collections.OrderedDict()
-        d["id_berita"] = row[0]
-        d["id_admin"] = row[1]
-        d["id_kategori"] = row[2]
-        d["id_status"] = row[3]
-        d["judul"] = row[4]
-        d["tgl_berita"] = row[5]
-        d["isi"] = row[6]
-        d["gambar"] = row[7]
-        d["sumber"] = row[8]
-        d["tgl_filtering"] = row[9]
-        d["tgl_validasi"] = row[10]
-        objects_list.append(d)
-    j = json.dumps(objects_list)
-    with open("student_objects.js", "w") as f:
-        f.write(j)
-    conn.close()
+    # conn = MySQLdb.connect(HOST, USERNAME, PASSWORD, DATABASE)
+    # # conn = psycopg2.connect(conn_string)
+    # cursor = conn.cursor()
+    # cursor.execute("SELECT * FROM tb_berita")
+    # rows = cursor.fetchall()
+    # rowarray_list = []
+    # for row in rows:
+    #     t = (row[0], row[1], row[2], row[3], row[4], row[5], row[6],row[7],row[8],row[9],row[10] )
+    #     rowarray_list.append(t)
+    # j = json.dumps(rowarray_list)
+    # with open("student_rowarrays.js", "w") as f:
+    #     f.write(j)
+    # # Convert query to objects of key-value pairs
+    # objects_list = []
+    # for row in rows:
+    #     d = collections.OrderedDict()
+    #     d["id_berita"] = row[0]
+    #     d["id_admin"] = row[1]
+    #     d["id_kategori"] = row[2]
+    #     d["id_status"] = row[3]
+    #     d["judul"] = row[4]
+    #     d["tgl_berita"] = row[5]
+    #     d["isi"] = row[6]
+    #     d["gambar"] = row[7]
+    #     d["sumber"] = row[8]
+    #     d["tgl_filtering"] = row[9]
+    #     d["tgl_validasi"] = row[10]
+    #     objects_list.append(d)
+    # j = json.dumps(objects_list)
+    # with open("student_objects.js", "w") as f:
+    #     f.write(j)
+    # conn.close()
 
-    print("[~] Selesai di convert ke JSON!!")
+    # print("[~] Selesai di convert ke JSON!!")

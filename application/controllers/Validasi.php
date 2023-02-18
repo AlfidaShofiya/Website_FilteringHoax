@@ -4,41 +4,37 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Validasi extends CI_Controller
 {
-  // membuat class construct
+  // Fungsi yang digunakan untuk memanggil atau mengimport berbagai library dan model yang digunakan
   public function __construct()
   {
-    // untuk menjalankan program pertama kali dieksekusi
     parent::__construct();
-    // load model dan library
     $this->load->library('session');
     $this->load->model('validasi_model');
     $this->load->library('form_validation');
-    $this->load->model("user_model");
+    $this->load->model('user_model');
     if ($this->user_model->isNotLogin()) redirect(site_url('login'));
   }
 
-  // mengambil data model dan di render
+  // Fungsi untuk mengarahkan halaman list berita hasil filtering pada menu Validasi
   public function index()
   {
-    // untuk mengambil data dari model secara keseluruhan
     $data["Validasi"] = $this->validasi_model->getAll();
-    // meload data pada view yang sudah dibuat pada folder view
     $this->load->view("admin/validasi/list", $data);
   }
 
+  // Fungsi untuk mengarahkan kepada halaman detail berita pada menu Validasi
   public function detail($id = NULL)
 	{
-		// untuk mengambil data dari model secara keseluruhan
 		$data["Validasi"] = $this->validasi_model->getDetail($id);
-		// meload data pada view yang sudah dibuat pada folder view
 		$this->load->view("admin/validasi/detail", $data);
 	}
 
+  // Fungsi untuk mengambil seluruh data session yang sudah dibuat saat login
   public function get_session_data(){
     $this->session->all_userdata();
   }
 
-  // untuk fungsi validasi
+  // Fungsi untuk mengubah nilai pada bagian data berita menjadi tervalidasi
   public function validasi($id = null)
   {
     $id_admin = $this->session->userdata('id_admin');

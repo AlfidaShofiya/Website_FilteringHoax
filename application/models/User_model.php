@@ -2,14 +2,17 @@
 
 class User_model extends CI_Model
 {
+	// Mendeklarasikan tabel dalam database yang digunakan
 	private $_table = "tb_admin";
 	private $_tableberita = "tb_berita";
-
+	
+	// Mendeklarasikan beberapa variable yang digunakan
 	public $id_admin;
 	public $username;
 	public $password;
 	public $role;
-
+	
+	// Mendeklarasikan beberapa ketentuan data yang digunakan
 	public function rules()
 	{
 		return [
@@ -34,16 +37,19 @@ class User_model extends CI_Model
 		];
 	}
 
+	// Fungsi yang digunakan untuk mengambil seluruh Data Admin
 	public function getAll()
 	{
 		return $this->db->get($this->_table)->result();
 	}
 
+	// Fungsi yang digunakan untuk mengambil Data Admin berdasarkan id Admin
 	public function getById($id)
 	{
 		return $this->db->get_where($this->_table, ["id_admin" => $id])->result();
 	}
 
+	// Fungsi yang digunakan untuk menyimpan Data Admin baru
 	public function save()
 	{
 		$post = $this->input->post();
@@ -55,6 +61,7 @@ class User_model extends CI_Model
 		redirect(site_url('user'));
 	}
 
+	// Fungsi yang digunakan untuk mengupdate isi dari Data Admin
 	public function update()
 	{
 		$post = $this->input->post();
@@ -67,14 +74,7 @@ class User_model extends CI_Model
 		redirect(site_url('user'));
 	}
 
-	// public function delete($id_admin)
-	// {
-	// 	// menjalankan dengan memanggil db dan tabel kemudian mencari id yang sesuai
-	// 	$this->db->delete($this->_table, array('id_admin' => $id_admin));
-	// 	$this->session->set_flashdata('berhasildihapus', 'Data Admin Berhasil Dihapus');
-	// 	redirect(site_url('user'));
-	// }
-
+	// Fungsi yang digunakan untuk menghapus Data Admin
 	public function delete($id_admin)
 	{
 		$this->db->select('*');
@@ -98,11 +98,12 @@ class User_model extends CI_Model
 		redirect(site_url('user'));
 	}
 
+	// Fungsi yang digunakan untuk melakukan login
 	public function doLogin()
 	{
 		$post = $this->input->post();
 
-		$this->db->where('username', $post["username"]);
+		$this->db->where(['username' => $post["username"]]);
 		$username = $this->username = $post["username"];
 		$user = $this->db->get($this->_table)->row();
 
@@ -119,11 +120,13 @@ class User_model extends CI_Model
 		return false;
 	}
 
+	// Fungsi yang digunakan untuk mengecek apakah admin sudah login
 	public function isNotLogin()
 	{
 		return $this->session->userdata('user_logged') === null;
 	}
 
+	// Fungsi yang digunakan untuk mengupdate waktu login terakhir dari admin
 	private function _updateLastLogin($id_admin)
 	{
 		$sql = "UPDATE {$this->_table} SET terakhir_login=now() WHERE id_admin={$id_admin}";

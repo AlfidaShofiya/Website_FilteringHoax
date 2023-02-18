@@ -2,8 +2,10 @@
 
 class Home_model extends CI_Model
 {
+	// Mendeklarasikan tabel dalam database yang digunakan
 	private $_table = "tb_berita";
 
+	// Fungsi yang digunakan untuk mengambil Data Berita
 	public function getDataBerita()
 	{
 		$this->db->select('*');
@@ -14,11 +16,13 @@ class Home_model extends CI_Model
 		return $this->db->get()->result();
 	}
 	
+	// Fungsi yang digunakan untuk mengambil Berita berdasarkan id Berita
 	public function getDetail($id)
 	{
 		return $this->db->get_where($this->_table, ["id_berita" => $id])->result();
 	}
-
+	
+	// Fungsi yang digunakan untuk mengambil beberapa Data Berita berdasarkan waktu
 	public function getListBerita()
 	{
 		$this->db->select('*');

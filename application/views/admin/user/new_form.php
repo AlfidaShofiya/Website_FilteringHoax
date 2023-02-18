@@ -17,13 +17,6 @@
 			<div class="main-panel">
 				<div class="content-wrapper">
 					<div class="row">
-						<!-- <div class="container-fluid">
-							<?php if (validation_errors()) : ?>
-								<div class="alert alert-danger" role="alert">
-									<?php echo validation_errors(); ?>
-								</div>
-							<?php endif; ?>
-						</div> -->
 						<div class="col-12 grid-margin stretch-card">
 							<div class="card">
 								<div class="card-body">
@@ -43,9 +36,7 @@
 											<span style="color: red;"><?php echo form_error('password'); ?></span>
 										</div>
 										<div class="form-group">
-											<label for="dibuat">Dibuat Pada</label>
-											<input type="datetime-local" class="form-control <?php echo form_error('dibuat') ? 'is-invalid':'' ?>" name="dibuat" id="dibuat" value="<?php echo set_value('dibuat'); ?>" placeholder="Dibuat Pada" required>
-											<span style="color: red;"><?php echo form_error('dibuat'); ?></span>
+											<input type="hidden" class="form-control <?php echo form_error('dibuat') ? 'is-invalid':'' ?>" name="dibuat" id="dibuat" value="<?php echo date("Y-m-d H:i:s"); ?>" placeholder="Dibuat Pada" required>
 										</div>
 										<button class="btn btn-primary float-right mr-2" style="background-color: #f58924; border:black;" type="submit" name="btn"> Simpan </button> 
 									</form>
@@ -63,6 +54,9 @@
 		</div>
 		<!-- page-body-wrapper ends -->
 	</div>
+	<!-- partial modal-->
+	<?php $this->load->view("admin/_partials/modal.php") ?>
+	<!-- partial -->
 	<!-- partial js -->
 	<?php $this->load->view("admin/_partials/js.php") ?>
 	<!-- partial -->

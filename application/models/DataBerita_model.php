@@ -2,8 +2,10 @@
 
 class DataBerita_model extends CI_Model
 {
+	// Mendeklarasikan tabel dalam database yang digunakan
 	private $_table = "tb_berita";
 
+	// Fungsi yang digunakan untuk mengambil Data Berita
 	public function getDataBerita()
 	{
 		$this->db->select('*');
@@ -13,7 +15,8 @@ class DataBerita_model extends CI_Model
 		$this->db->order_by('tgl_validasi', 'desc');
 		return $this->db->get()->result();
 	}
-
+	
+	// Fungsi yang digunakan untuk mengambil Berita berdasarkan id Berita
 	public function getById($id)
 	{
 		$this->db->select('*');
@@ -23,16 +26,18 @@ class DataBerita_model extends CI_Model
 		$this->db->order_by('id_berita', 'desc');
 		return $this->db->get()->result();
 	}
-
+	
+	// Fungsi yang digunakan untuk mengambil Berita berdasarkan id Berita
 	public function getDetail($id)
 	{
 		return $this->db->get_where($this->_table, ["id_berita" => $id])->result();
 	}
-
+	
+	// Fungsi yang digunakan untuk mengupdate isi dari Data Berita
 	public function update($id = NULL)
 	{
 		$id = $this->input->post('id');
-
+		
 		$data = array(
 			'id_berita' => $id,
 			'judul' => $this->input->post('judul'),
@@ -43,15 +48,15 @@ class DataBerita_model extends CI_Model
 			'sumber' => $this->input->post('sumber'),
 			'gambar' => $this->input->post('gambar'),
 		);
-
+		
 		$this->db->update($this->_table, $data, array('id_berita' => $id));
 		$this->session->set_flashdata('berhasildiubah', 'Data Berita Berhasil Diupdate');
 		redirect(site_url('databerita'));
 	}
-
+	
+	// Fungsi yang digunakan untuk menghapus Data Berita
 	public function delete($id_berita)
 	{
-		// menjalankan dengan memanggil db dan tabel kemudian mencari id yang sesuai
 		$this->db->delete($this->_table, array('id_berita' => $id_berita));
 		$this->session->set_flashdata('berhasildihapus', 'Data Berita Berhasil Dihapus');
 		redirect(site_url('databerita'));

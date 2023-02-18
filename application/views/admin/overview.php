@@ -31,7 +31,13 @@
 							<div class="row">
 								<div class="col">
 									<div class="card text-white bg-success mb-3">
-										<div style="font-size: 25px;" class="card-header">Selamat datang, <?php print_r($this->session->userdata['username']); ?>.</div>
+										<div style="font-size: 25px;" class="card-header">Selamat datang, 
+											<?php
+												$username_bahan = $this->session->userdata['username'];
+												$username = ucfirst($username_bahan);
+												print_r($username);
+											?>.
+										</div>
 										<div class="card-body">
 											<div class="row">
 												<div class="col-md-8 pl-5 mt-5 ">
@@ -159,23 +165,6 @@
 								</div>
 							</div>
 						<!-- </div> -->
-						<!-- <div class="col-md-3 ">
-							<div class="row">
-								<div class="card mb-3 py-5" style="border: 1px solid #3DD880;">
-									<img class="card-img-top" src="<?php echo base_url('assets/image/buku.png') ?>" ma alt="Card image cap">
-									<div style="text-align: center; border: 2px #ffffff" class="card-body">
-										<h5 class="card-title">Aktivasi Sistem</h5>
-										<div class="toggle">
-											<input type="checkbox">
-											<label for="" class="onbtn">On</label>
-											<label for="" class="offbtn">Off</label>
-										</div>
-										<p style="margin-top: 15px;" class="card-text">Klik disini untuk Mengaktifkan Sistem atau Menonaktifkan Sistem Filtering Hoax</p>
-
-									</div>
-								</div>
-							</div>
-						</div> -->
 					</div>
 				</div>
 			</div>
